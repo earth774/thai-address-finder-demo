@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   type ThaiAddress,
   autocomplete,
   findByDistrict,
   findByPostalCode,
   findByProvince,
+  initAddressData,
   searchAddresses,
 } from '@amiearth/thai-address-finder'
 import './App.css'
@@ -14,6 +15,7 @@ function App() {
   const [results, setResults] = useState<ThaiAddress[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dataReady, setDataReady] = useState(false)
 
   const hasQuery = query.trim().length > 0
 
@@ -36,6 +38,11 @@ function App() {
     const trimmed = query.trim()
     if (!trimmed) {
       setError('กรุณากรอกคำค้นหา')
+      setResults([])
+      return
+    }
+    if (!dataReady) {
+      setError('กำลังเตรียมข้อมูล โปรดลองอีกครั้ง')
       setResults([])
       return
     }
@@ -75,6 +82,15 @@ function App() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    initAddressData()
+      .then(() => setDataReady(true))
+      .catch((err) => {
+        console.error(err)
+        setError('โหลดข้อมูลที่อยู่ไม่สำเร็จ')
+      })
+  }, [])
 
   return (
     <main className="page">
